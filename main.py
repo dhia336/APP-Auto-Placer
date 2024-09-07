@@ -1,26 +1,19 @@
+from pywinauto import Application
 import subprocess
-import pyautogui
-import time
-
-# Define the shortcuts and the coordinates
-apps = [
-    {"shortcut": "C:\\Users\\Vic\\Desktop\\PROGRAMS\\FrameView.lnk", "position": (100, 100)},
-    {"shortcut": "C:\\Users\\Vic\\Desktop\\PROGRAMS\\XOutput.lnk", "position": (300, 100)},
-]
-
+from time import sleep
 # Function to open an app
 def open_app(shortcut_path):
     subprocess.Popen(shortcut_path, shell=True)
+# Function to move and resize a window by executable name
+def move_and_resize_window_by_exe(executable_name, position, size):
+    try:
+        app = Application(backend='win32').connect(path=executable_name)
+        window = app.top_window()
+        window.move_window(x=position[0], y=position[1], width=size[0], height=size[1])
+    except Exception as e:
+        print(f"Error: {e}")
 
-# Function to position an app window
-def move_window(position):
-    time.sleep(2)  # Wait for the app to open
-    pyautogui.hotkey('alt', 'space')  # Open window control menu
-    pyautogui.press('m')  # Select move
-    pyautogui.moveTo(position)  # Move the window to the desired position
-    pyautogui.click()  # Confirm the move
-
-# Open and position each app
-for app in apps:
-    open_app(app["shortcut"])
-    move_window(app["position"])
+# Example usage
+open_app(r"C:\Program Files\XOutPut\XOutput.exe")
+sleep(1)
+move_and_resize_window_by_exe(r"C:\Program Files\XOutPut\XOutput.exe", (0, 0), (300, 300))
