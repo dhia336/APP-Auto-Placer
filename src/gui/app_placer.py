@@ -5,6 +5,7 @@ from time import sleep
 import json
 from ..utils.window_manager import WindowManager
 from ..utils.config_manager import AppConfig, ConfigManager
+from ..utils.screen_manager import PositionSelector, ScreenManager
 
 logger = logging.getLogger(__name__)
 
@@ -63,6 +64,11 @@ class AppPlacerGUI:
                 text="Click to choose an app!",
                 command=lambda: self.choose_shortcut(app_widgets[0])
             ),
+            ctk.CTkButton(
+                self.windows_frame,
+                text="Select Position",
+                command=lambda: self.select_position(app_widgets[2], app_widgets[3])
+            ),
             ctk.CTkEntry(
                 self.windows_frame,
                 width=140,
@@ -103,6 +109,32 @@ class AppPlacerGUI:
         if file_path:
             button.configure(text=file_path)
 
+    def select_position(self, position_entry: ctk.CTkEntry, size_entry: ctk.CTkEntry) -> None:
+        """Opens a visual position and size selector."""
+        # Get current values if they exist
+        try:
+            current_pos = self.parse_position_size(position_entry.get())
+            current_size = self.parse_position_size(size_entry.get())
+        except ValueError:
+            # Default to center of screen if no valid values
+            screen_size = ScreenManager.get_screen_size()
+            current_pos = (screen_size[0] // 4, screen_size[1] // 4)
+            current_size = (screen_size[0] // 2, screen_size[1] // 2)
+
+        # Create and show the position selector
+        selector = PositionSelector(self.root, current_pos, current_size)
+        self.root.wait_window(selector)
+
+        # Get the selected position and size
+        position, size = selector.get_position_and_size()
+        
+        # Update the entry fields
+        position_entry.delete(0, 'end')
+        position_entry.insert(0, f"{position[0]}*{position[1]}")
+        
+        size_entry.delete(0, 'end')
+        size_entry.insert(0, f"{size[0]}*{size[1]}")
+
     def parse_position_size(self, value: str) -> Tuple[int, int]:
         """Parses position or size string into a tuple of integers."""
         try:
@@ -120,8 +152,8 @@ class AppPlacerGUI:
                 continue
 
             try:
-                position = self.parse_position_size(app_widgets[1].get())
-                size = self.parse_position_size(app_widgets[2].get())
+                position = self.parse_position_size(app_widgets[2].get())
+                size = self.parse_position_size(app_widgets[3].get())
                 configs.append(AppConfig(shortcut_path, position, size))
             except ValueError as e:
                 logger.error(f"Invalid configuration: {e}")
@@ -194,6 +226,11 @@ class AppPlacerGUI:
                         text=config.shortcut_path,
                         command=lambda: self.choose_shortcut(app_widgets[0])
                     ),
+                    ctk.CTkButton(
+                        self.windows_frame,
+                        text="Select Position",
+                        command=lambda: self.select_position(app_widgets[2], app_widgets[3])
+                    ),
                     ctk.CTkEntry(
                         self.windows_frame,
                         width=140,
@@ -209,8 +246,8 @@ class AppPlacerGUI:
                 for col, widget in enumerate(app_widgets):
                     widget.grid(column=col, row=self.current_row, padx=10, pady=10)
                 
-                app_widgets[1].insert(0, f"{config.position[0]}*{config.position[1]}")
-                app_widgets[2].insert(0, f"{config.size[0]}*{config.size[1]}")
+                app_widgets[2].insert(0, f"{config.position[0]}*{config.position[1]}")
+                app_widgets[3].insert(0, f"{config.size[0]}*{config.size[1]}")
                 
                 self.apps.append(app_widgets)
                 self.current_row += 1
