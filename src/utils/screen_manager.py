@@ -54,12 +54,16 @@ class PositionSelector(tk.Toplevel):
         # Add a border to make it visible
         self.configure(bg='blue')
         
+        # Store current position and size
+        self.current_position = initial_position
+        self.current_size = initial_size
+        
         # Bind mouse events
         self.bind('<Button-1>', self.start_move)
         self.bind('<B1-Motion>', self.on_move)
         self.bind('<Button-3>', self.start_resize)
         self.bind('<B3-Motion>', self.on_resize)
-        self.bind('<Escape>', lambda e: self.destroy())
+        self.bind('<Escape>', self.on_confirm)
         
         # Add instructions label
         self.instructions = tk.Label(
@@ -71,15 +75,15 @@ class PositionSelector(tk.Toplevel):
         )
         self.instructions.place(relx=0.5, rely=0.5, anchor='center')
         
-        # Store the result
-        self.result = None
-        
         # Center the window on screen
         screen_width = self.winfo_screenwidth()
         screen_height = self.winfo_screenheight()
         x = (screen_width - initial_size[0]) // 2
         y = (screen_height - initial_size[1]) // 2
         self.geometry(f"+{x}+{y}")
+        
+        # Update initial position after centering
+        self.current_position = (x, y)
 
     def start_move(self, event):
         """Start moving the window."""
@@ -93,6 +97,7 @@ class PositionSelector(tk.Toplevel):
         x = self.winfo_x() + deltax
         y = self.winfo_y() + deltay
         self.geometry(f"+{x}+{y}")
+        self.current_position = (x, y)
 
     def start_resize(self, event):
         """Start resizing the window."""
@@ -106,11 +111,13 @@ class PositionSelector(tk.Toplevel):
         width = self.start_width + (event.x - self.start_x)
         height = self.start_height + (event.y - self.start_y)
         self.geometry(f"{width}x{height}")
+        self.current_size = (width, height)
+
+    def on_confirm(self, event=None):
+        """Handle confirmation of position and size."""
+        self.result = (self.current_position, self.current_size)
+        self.destroy()
 
     def get_position_and_size(self) -> Tuple[Tuple[int, int], Tuple[int, int]]:
         """Get the current position and size of the window."""
-        x = self.winfo_x()
-        y = self.winfo_y()
-        width = self.winfo_width()
-        height = self.winfo_height()
-        return ((x, y), (width, height)) 
+        return self.result if self.result else (self.current_position, self.current_size) 
