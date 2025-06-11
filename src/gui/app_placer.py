@@ -18,6 +18,7 @@ class AppPlacerGUI:
     def __init__(self):
         self.root = ctk.CTk()
         self.root.title("AUTO-PLACER")
+        self.root.iconbitmap("src/assets/aap.ico")
         self.apps: List[List[CTkWidgetType]] = []
         self.current_row = 0
         self.setup_ui()
